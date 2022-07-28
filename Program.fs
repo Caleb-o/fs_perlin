@@ -17,8 +17,7 @@ let CreateMap frequency octaves reset =
     if reset then
         Perlin.Init()
 
-    for pixel_idx in 0..(int (width * height) - 1) do ignore (
-    begin
+    for pixel_idx in 0..(int (width * height) - 1) do (
         let x = pixel_idx % int (width)
         let y = pixel_idx / int (width)
 
@@ -34,7 +33,6 @@ let CreateMap frequency octaves reset =
         Array.set mapBytes ((pixel_idx * 4) + 1) rgb
         Array.set mapBytes ((pixel_idx * 4) + 2) rgb
         Array.set mapBytes ((pixel_idx * 4) + 3) 255uy
-    end
     )
 
     let tex = new Texture(width, height)
