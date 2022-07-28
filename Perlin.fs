@@ -3,18 +3,18 @@ module Perlin
 open System
 open System.Collections.Generic
 
-type vec2 = {
+type Vec2 = {
     x : float
     y : float
 }
 
-let Dot vec_a vec_b =
-  vec_a.x * vec_b.x + vec_a.y * vec_b.y
+let dot vecA vecB =
+  vecA.x * vecB.x + vecA.y * vecB.y
 
 let mutable seed = 0
 let mutable offset = (0, 0)
 
-let MakePermutation () =
+let makePermutation () =
     let rand = Random(seed)
     let rec make_perm idx (l: List<int>) =
         if idx < l.Capacity / 2 then
@@ -27,60 +27,60 @@ let MakePermutation () =
     l.ToArray()
 
 
-let permutation = MakePermutation ()
+let permutation = makePermutation ()
 
-let Init () =
+let init () =
     seed <- DateTime.Now.Millisecond
 
     let rand = Random(seed)
     offset <- (rand.Next(), rand.Next())
 
 
-let GetConstVec v =
+let getConstVec v =
     match (v &&& 3) with
     | 0 -> { x = 1.0; y = 1.0 }
     | 1 -> { x = -1.0; y = 1.0 }
     | 2 -> { x = -1.0; y = -1.0 }
     | _ -> { x = 1.0; y = -1.0 }
 
-let Fade t =
+let fade t =
     ((6.0 * t - 15.0) * t + 10.0) * t * t * t
 
-let Lerp t a b =
+let lerp t a b =
     a + t * (b - a)
 
-let Noise2d x y =
+let noise2d x y =
     let offsetx, offsety = offset
     let xx = (int (floor x) + offsetx) &&& 255
     let yy = (int (floor y) + offsety) &&& 255
     let xf = x - (floor x)
     let yf = y - (floor y)
-    let top_right = { x = xf - 1.0; y = yf - 1.0 }
-    let top_left = { x = xf; y = yf - 1.0 }
-    let bottom_right = { x = xf - 1.0; y = yf }
-    let bottom_left = { x = xf; y = yf }
+    let topRight = { x = xf - 1.0; y = yf - 1.0 }
+    let topLeft = { x = xf; y = yf - 1.0 }
+    let bottomRight = { x = xf - 1.0; y = yf }
+    let bottomLeft = { x = xf; y = yf }
 
-    let value_top_right = Array.item ((Array.item (xx + 1) permutation) + yy + 1) permutation
-    let value_top_left = Array.item ((Array.item xx permutation) + yy + 1) permutation
-    let value_bottom_right = Array.item ((Array.item (xx + 1) permutation) + yy) permutation
-    let value_bottom_left = Array.item ((Array.item xx permutation) + yy) permutation
+    let valueTopRight = Array.item ((Array.item (xx + 1) permutation) + yy + 1) permutation
+    let valueTopLeft = Array.item ((Array.item xx permutation) + yy + 1) permutation
+    let valueBottomRight = Array.item ((Array.item (xx + 1) permutation) + yy) permutation
+    let valueBottomLeft = Array.item ((Array.item xx permutation) + yy) permutation
 
-    let dot_top_right = Dot top_right (GetConstVec value_top_right)
-    let dot_top_left = Dot top_left (GetConstVec value_top_left)
-    let dot_bottom_right = Dot bottom_right (GetConstVec value_bottom_right)
-    let dot_bottom_left = Dot bottom_left (GetConstVec value_bottom_left)
+    let dotTopRight = dot topRight (getConstVec valueTopRight)
+    let dotTopLeft = dot topLeft (getConstVec valueTopLeft)
+    let dotBottomRight = dot bottomRight (getConstVec valueBottomRight)
+    let dotBottomLeft = dot bottomLeft (getConstVec valueBottomLeft)
 
-    let u = Fade xf
-    let v = Fade yf
+    let u = fade xf
+    let v = fade yf
 
-    Lerp u (Lerp v dot_bottom_left dot_top_left) (Lerp v dot_bottom_right dot_top_right)
+    lerp u (lerp v dotBottomLeft dotTopLeft) (lerp v dotBottomRight dotTopRight)
 
 
-let Noise2dWithOctaves x y octaves =
-    let rec GetOctave idx (n: float) a f =
+let noise2dWithOctaves x y octaves =
+    let rec getOctave idx (n: float) a f =
         if idx < octaves then
-            GetOctave (idx + 1) (n + (a * (Noise2d (x * f) (y * f)))) (a * 0.5) (f * 2.0)
+            getOctave (idx + 1) (n + (a * (noise2d (x * f) (y * f)))) (a * 0.5) (f * 2.0)
         else
             n
 
-    GetOctave 0 0.0 1.0 0.005
+    getOctave 0 0.0 1.0 0.005

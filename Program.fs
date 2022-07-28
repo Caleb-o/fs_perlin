@@ -3,7 +3,7 @@ open SFML.Window
 
 let width = 1080ul
 let height = 720ul
-let fps_cap = 24ul
+let fpsCap = 24ul
 
 let minOctaves = 1
 let maxOctaves = 8
@@ -11,11 +11,11 @@ let freqInc = 0.1
 let minFrequency = 0.1
 let maxFrequency = 20.0
 
-let CreateMap frequency octaves reset =
+let createMap frequency octaves reset =
     let mapBytes = Array.create (4 * int(width * height)) 0uy
 
     if reset then
-        Perlin.Init()
+        Perlin.init()
 
     for pixel_idx in 0..(int (width * height) - 1) do (
         let x = pixel_idx % int (width)
@@ -24,7 +24,7 @@ let CreateMap frequency octaves reset =
         let xx = float(x) * frequency
         let yy = float(y) * frequency
 
-        let noise = Perlin.Noise2dWithOctaves xx yy octaves;
+        let noise = Perlin.noise2dWithOctaves xx yy octaves;
         let adjusted_noise = int (((noise + 1.0) * 0.5) * 255.0)
         let rgb = byte (System.Math.Clamp(adjusted_noise, 0, 255))
 
@@ -40,7 +40,7 @@ let CreateMap frequency octaves reset =
     tex
 
 
-let UpdateWindowTitle (window: RenderWindow) frequency octaves =
+let updateWindowTitle (window: RenderWindow) frequency octaves =
     window.SetTitle((sprintf "Perlin Noise Map | Frequency %.1f | Octaves %d" frequency octaves))
 
 
@@ -49,10 +49,10 @@ let main _argv =
     let mutable frequency = 5.0
     let mutable octaves = 4
 
-    let map = new Sprite((CreateMap frequency 1 true))
+    let map = new Sprite((createMap frequency 1 true))
 
     let window = new RenderWindow(new VideoMode(width, height), "N/A")
-    window.SetFramerateLimit(fps_cap)
+    window.SetFramerateLimit(fpsCap)
     // :?> - Downcast (Run-time)
     // :> - Upcast (Compile-time)
     window.Closed.AddHandler(fun sender _ -> (sender :?> RenderWindow).Close())
@@ -60,20 +60,20 @@ let main _argv =
         match args.Code with
         | Keyboard.Key.R ->
             window.SetTitle("Loading map...")
-            map.Texture <- (CreateMap frequency octaves true)
-            UpdateWindowTitle window frequency octaves
+            map.Texture <- (createMap frequency octaves true)
+            updateWindowTitle window frequency octaves
             ()
         | Keyboard.Key.F ->
             window.SetTitle("Reloading map...")
-            map.Texture <- (CreateMap frequency octaves false)
-            UpdateWindowTitle window frequency octaves
+            map.Texture <- (createMap frequency octaves false)
+            updateWindowTitle window frequency octaves
             ()
         | Keyboard.Key.A ->
             octaves <- System.Math.Clamp((octaves - 1), minOctaves, maxOctaves)
-            UpdateWindowTitle window frequency octaves
+            updateWindowTitle window frequency octaves
         | Keyboard.Key.D ->
             octaves <- System.Math.Clamp((octaves + 1), minOctaves, maxOctaves)
-            UpdateWindowTitle window frequency octaves
+            updateWindowTitle window frequency octaves
         | Keyboard.Key.Escape ->
             window.Close()
         | _ -> ()
@@ -82,14 +82,14 @@ let main _argv =
         match args.Code with
         | Keyboard.Key.Q ->
             frequency <- System.Math.Clamp((frequency - freqInc), minFrequency, maxFrequency)
-            UpdateWindowTitle window frequency octaves
+            updateWindowTitle window frequency octaves
         | Keyboard.Key.E ->
             frequency <- System.Math.Clamp((frequency + freqInc), minFrequency, maxFrequency)
-            UpdateWindowTitle window frequency octaves
+            updateWindowTitle window frequency octaves
         | _ -> ()
     )
 
-    UpdateWindowTitle window frequency octaves
+    updateWindowTitle window frequency octaves
 
     let rec mainLoop() =
         window.DispatchEvents()
